@@ -1,5 +1,6 @@
 # brkn_beamer_modern
-A modern template for latex beamer inspired by the midcentury-modern template.
+A modern template for latex beamer inspired and built upon the midcentury-modern template.
+I created this speciffically for the defense of my master thesis.
 
 Features:
 
