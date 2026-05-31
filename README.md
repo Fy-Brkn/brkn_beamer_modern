@@ -5,4 +5,4 @@ Features:
 
 1. Option for two colour ways (Blue, Red).
 2. Progessbar with section and subsection marks.
-
+3. Compatible mathfont.
