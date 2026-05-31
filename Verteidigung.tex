@@ -1,0 +1,1196 @@
+% =============================================================================
+% midcenturymodern_demo.tex
+% Demo file for the Mid-Century Modern Beamer template.
+% Compile with: lualatex midcenturymodern_demo.tex
+% =============================================================================
+\documentclass[aspectratio=169,notheorems]{beamer}
+\usepackage[
+ %notes % AKTIVIERTE DEN SPRECHERKARTEN MODUS
+]{brkn-beamer}
+\usepackage[
+backend=biber,
+style=alphabetic,
+sorting=nyt,
+maxbibnames=99,
+giveninits=true,
+url=false,
+doi=false,
+isbn=false
+]{biblatex}
+\renewcommand{\bibfont}{\tiny}
+\setlength{\bibitemsep}{0.3em} % abstände kleiner
+%\DeclareFieldFormat{postnote}{#1}  % Entfernt „p.“/„pp.“ komplett
+%\setcounter{biburlnumpenalty}{9000}    % Zahlen in URLs brechen
+%\setcounter{biburlucpenalty}{9000}     % Großbuchstaben
+%\setcounter{biburllcpenalty}{9000}     % Kleinbuchstaben
+\addbibresource{Kanis Lemma and its applications to cryptography.bib}
+
+\usepackage{faktor}
+
+% --- Theme selection (comment/uncomment to switch) ---
+%\mcmTheme{Kraft}
+\mcmTheme{DeepBlue}
+% 
+
+%Tikz setting
+
+\tikzset{
+	every picture/.append style={
+		>={Stealth}
+	},
+	every path/.style={
+		->,
+		color=mcmExample!80!black
+	}
+}
+% --- Metadata ---
+\title{ Kani's Lemma and its applications to isogeny-based cryptography}
+\author{ Fynn Henrik Birkemeyer}
+\institute{ Institut für Mathematik}
+\date{\today}
+
+
+
+% Schrift überschreiben
+\setsansfont{Helvetica}
+\renewfontfamily\mcmTitleFont{Helvetica}
+
+% --- Automatic section/subsection pages ---
+\AtBeginSection[]{%
+	\begin{frame}[plain]
+		\sectionpage
+	\end{frame}
+}
+\AtBeginSubsection[]{%
+	\begin{frame}[plain]
+		\subsectionpage
+	\end{frame}
+}
+
+\AtEveryCite{\color{mcmPrimary}}
+
+\begin{document}
+	
+% ================== MUSTERSEITE =========================
+%		\begin{frame}{TITLE}
+%			\begin{columns}[T]
+%				\begin{column}{0.616\textwidth} % HIER WERDEN DIE BOXEN IM GOLDENEN SCHNITT POSITIONIERT KANN ANGEPSASST WERDEN 
+%					\begin{block}{Definition}
+%					\end{block}
+%				\end{column}
+%				\begin{column}{0.38\textwidth}
+%					\begin{exampleblock}{Example}
+%					\end{exampleblock}
+%				\end{column}
+%			\end{columns}
+%			%================ NOTIZEN ===================
+%			\note{}
+%		\end{frame}
+	% =====================================================================
+	% TITLE PAGE
+	% =====================================================================
+	\begin{frame}
+		\titlepage
+	\end{frame}
+	\note{
+		Welcome to the presentation of my master's thesis, \textbf{Kani's Lemma and its applications to isogeny-based cryptography}.
+		
+		In the next \textbf{30 to 45 minutes}, I would like to guide you through the main story of this thesis. 
+%		We will start with the basic mathematical objects, namely \textbf{abelian varieties} and \textbf{isogenies}. \\
+%		After this we move to the theoretical core of the talk, which is \textbf{Kani's Lemma} together with \textbf{Zarhin's trick}.\\
+%		 Following this, I will place these ideas into the \textbf{historical development} of isogeny-based cryptography. \\
+%		 Finally, I will explain why these results create a genuinely \textbf{new dimension} for the subject, both from a constructive and from a destructive point of view.
+		
+		So the overall goal of the talk is to \textbf{show how a rather abstract piece of mathematics turns out to have very concrete consequences in modern cryptography}.
+	}
+	% =====================================================================
+	% TABLE OF CONTENTS
+	% =====================================================================
+	\begin{frame}{Table of Contents}
+		\tableofcontents
+	\end{frame}
+	\note{\textbf{Four sections:}\begin{itemize}
+			\item what is an isogeny theoretical and practical
+			\item Kanis lemma and Zarhins trick
+			\item Historical development
+			\item A new dimension introduced by it
+	\end{itemize}
+So this outline is meant to serve as a roadmap: \textbf{first the language, then the theory, then the context, and finally the applications.}}
+
+	
+% =====================================================================
+	\section{What is an isogeny?}
+	\note{
+		We now begin with the first part of the talk, which is about the basic notion of an \textbf{isogeny}.
+		
+		Isogeny-based cryptography lies at the intersection of \textbf{number theory}, \textbf{algebraic geometry}, and \textbf{computer science}. This makes the subject both fascinating and difficult to enter. In order to understand the later applications, we first need a clear picture of the mathematical objects involved and of the maps between them.
+		
+		One of the goals of my thesis was precisely to make this\textbf{ entry point more accessible}: to give a presentation of the necessary theory that is still reasonably complete, while keeping the overall picture visible. So in this first section, I want to build exactly that foundation.
+	}
+	
+	
+	\subsection{For a mathematician.}
+	\note{
+		I will first look at isogenies from the perspective of a \textbf{mathematician}.
+		
+		From this point of view, the main questions are about \textbf{structure}, \textbf{existence}, and \textbf{general properties}. In other words, we are first interested in what these objects are, how they fit into the general theory of abelian varieties, and which abstract descriptions are available.
+		
+		Only afterwards will I switch to the perspective of a \textbf{computer scientist}, where the focus is less on existence and more on \textbf{explicit representations} and \textbf{efficient computation}. I find this distinction particularly useful, because in isogeny-based cryptography both viewpoints are essential, but they emphasize very different aspects of the same object.
+	}
+	
+	
+	\begin{frame}{Abelian Varieties}
+		\begin{columns}[T]
+			\begin{column}{0.616\textwidth}
+				\begin{block}{Definition \cite{milneAbelianVarieties}}
+					An \textbf{abelian variety} over a field $\mathbb{k}$ is a 
+					projective variety $A$ together with morphisms
+					\begin{align*}
+					m &: A \times A \to A,\\
+					\iota &: A \to A \\
+					e &: \operatorname{Spec}({\mathbb{k}}) \to A
+				\end{align*}
+					making $A$ a commutative group object in {$\operatorname{Var}_\mathbb{k}$}.
+				\end{block}
+			\end{column}
+			\begin{column}{0.38\textwidth}
+				\begin{exampleblock}{Example}
+					Every \textbf{elliptic curve} $E$ is an abelian variety 
+					of dimension~$1$.
+					\[
+					y^2 = x^3 + ax + b
+					\]
+				\end{exampleblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			In order to understand isogenies, I first need to introduce \textbf{abelian varieties}, because these are the objects between which isogenies are defined.
+			
+			Very roughly speaking, an abelian variety is a geometric object that can be described algebraically and that at the same time carries the structure of a \textbf{commutative group}. The formal definition on the slide expresses exactly this point: we have morphisms for addition, inversion, and the neutral element, and together they make the variety into a group object.
+			
+			Let me already add one practical remark about why these objects are interesting beyond pure theory. The group law is given by \textbf{algebraic data}, in particular by polynomial expressions, and this is exactly the kind of structure on which computations can be carried out efficiently. So abelian varieties are not only rich mathematical objects; they are also suitable environments for explicit computation.
+			
+			The most familiar example is an \textbf{elliptic curve}, which is simply the one-dimensional case. But of course there are many higher-dimensional examples as well, such as \textbf{Jacobians}, \textbf{abelian surfaces}, and more general higher-dimensional abelian varieties.
+			
+			So the main point to keep in mind from this slide is the following: abelian varieties combine \textbf{geometry}, \textbf{algebra}, and \textbf{group structure} in one object, and this is exactly why they are the natural setting for isogenies.
+		}
+	\end{frame}
+	
+	\begin{frame}{Isogenies}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Definition \cite[Prop.~7.1]{milneAbelianVarieties}}
+					A homomorphism $\varphi: A \to B$ between abelian varieties
+					is called an \textbf{isogeny} if
+					\begin{itemize}
+						\item $\varphi$ is surjective,
+						\item $\dim A = \dim B$.
+					\end{itemize}
+					\vspace{1em}
+					The \textbf{degree} of $\varphi$ is defined as:
+					\begin{align*}
+						\deg \varphi \coloneqq [\mathbb{k}(A) : \mathbb{k}(B)]
+					\end{align*}
+					Note that the degree is multiplicative.
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Kernel $\leftrightarrow$ Isogeny\\ \cite[Ap.~6, Thm.~4]{mumfordAbelianVarieties1970}}
+					Given an abelian variety $A$, then there is a bijection between the following two sets:
+					\begin{itemize}
+						\item finite subgroups $G \subseteq A(\bar{\mathbb{k}})$,
+						\item separable isogenies $\varphi: A \to B$
+						with $\ker \varphi = G$.
+					\end{itemize}
+				\end{block}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			We now come to the central notion of the talk, namely an \textbf{isogeny}.
+			An isogeny is a homomorphism between abelian varieties that is \textbf{surjective} and whose source and target have the same \textbf{dimension}. So we should think of it as a structure-preserving map between these geometric group objects.
+			A second important notion on this slide is the \textbf{degree} of an isogeny. Informally, the degree measures the size or complexity of the map. In the general theory, it is defined via function fields, as written on the slide. In the separable case, which is the one we mainly have in mind here, it is often helpful to think of the degree as the size of the fibers. I will not go into the technical details of that distinction, but this intuition is enough for the purposes of the talk.
+			The most important statement on this slide is the \textbf{Kernel--Isogeny Correspondence}. It tells us that finite subgroups of an abelian variety correspond to separable isogenies, and conversely. In other words, an isogeny can often be accessed through its \textbf{kernel}.
+			This is extremely important for everything that follows. It means that instead of viewing an isogeny only as an abstract map, we can often describe it by finite subgroup data. That is exactly the point where the abstract theory begins to move toward explicit constructions.
+			\textbf{So the key message of this slide is:} an isogeny is a \textbf{group homomorphism with geometric meaning}, and in practice it is often controlled by its \textbf{kernel}.
+		}
+	\end{frame}
+	
+	
+	
+	\begin{frame}{Principally Polarized Abelian Varieties}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Definition \cite{hindryDiophantineGeometryIntroduction2000}}
+					A \textbf{polarization} on $A$ is an isogeny
+					\begin{align*}
+						\lambda: A \to \hat{A}
+					\end{align*}
+					induced by an ample line bundle.
+					It is \textbf{principal} if it is an isomorphism. This implies $\deg \lambda = 1$.\\[0.5em]
+					We call the tuple $(A, \lambda)$ a \textbf{(principally) polarized
+						abelian variety (p.p.a.v.)}.
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{exampleblock}{Example \cite{silvermanArithmeticEllipticCurves2009}}
+					Every elliptic curve $E$ carries a canonical 
+					principal polarization
+					\begin{align*}
+						\lambda_E : E &\to \hat{E} \\
+						P &\mapsto [P] - [O].
+					\end{align*}
+				\end{exampleblock}
+%				\begin{alertblock}{Why p.p.a.v.s?}
+%					Isogenies between p.p.a.v.s are 
+%					\textbf{compatible with polarizations} —
+%					the structure needed for Kani's Lemma.
+%				\end{alertblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{
+			In practice, we often do not work with arbitrary abelian varieties, but with a particularly well-behaved class, namely \textbf{principally polarized abelian varieties}, or \textbf{p.p.a.v.s}.
+			
+			A \textbf{polarization} on an abelian variety $A$ is an isogeny from $A$ to its dual $\hat{A}$ that is induced by an ample line bundle. If this polarization is an isomorphism, then it is called \textbf{principal}. So a p.p.a.v.\ is an abelian variety together with this additional  structure.
+			
+			The important point here is that a polarization is not just extra decoration. It is additional \textbf{structure} that has to be respected by the maps we consider later. In particular, this will become essential once we talk about \textbf{Kani's Lemma}, because there the compatibility with polarizations is part of the whole setup.
+			
+			Again, elliptic curves provide the guiding example. Every elliptic curve carries a \textbf{canonical principal polarization}, so the elliptic case fits very naturally into this broader framework.
+			
+			So from now on, the objects we are really interested in are not just abelian varieties by themselves, but abelian varieties equipped with the right additional structure. That is the setting in which the later theory takes place.
+		}
+	\end{frame}
+	
+%	\begin{frame}{Dual Isogeny}
+%		\begin{columns}[T]
+%			\begin{column}{0.616\textwidth}
+%				\begin{block}{Definition}
+%					For every isogeny $\varphi: A \to B$ of degree $n$
+%					there exists a unique \textbf{dual isogeny}
+%					\[
+%					\hat{\varphi}: B \to A
+%					\]
+%					That satisfies
+%					\[
+%					\hat{\varphi} \circ \varphi = [n]_A.
+%					\]
+%				\end{block}
+%			\end{column}
+%			\begin{column}{0.38\textwidth}
+%				\begin{exampleblock}{Illustration}
+%					\centering
+%					\begin{tikzpicture}[node distance=2cm, auto]
+%						\node (A1) {$A$};
+%						\node (B)  [right of=A1] {$B$};
+%						\node (A2) [right of=B]  {$A$};
+%						\draw[->] (A1) to node {$\varphi$}     (B);
+%						\draw[->] (B)  to node {$\hat\varphi$} (A2);
+%						\draw[->, bend right=40] (A1) 
+%						to node[below] {$[n]_A$} (A2);
+%					\end{tikzpicture}
+%				\end{exampleblock}
+%			\end{column}
+%		\end{columns}
+%		%================ NOTIZEN ===================
+%		\note{}
+%	\end{frame}
+	
+	\begin{frame}{Isogenies of P.P.A.V.s}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Definition \cite{robertApplicationsHigherDimensional}}
+					An $n$-isogeny $\varphi: A \to B$ between p.p.a.v.s
+					$(A, \lambda_A)$ and $(B, \lambda_B)$ is called
+					\textbf{compatible} if
+					\begin{align*}
+						\varphi^* \lambda_B =[n]_A \circ \lambda_A = n\cdot \lambda_{A},
+					\end{align*}
+					where $\varphi^* \lambda_B := \hat{\varphi} 
+					\circ \lambda_B \circ \varphi$.
+				\end{block}
+				\vspace{0.5em}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{exampleblock}{Illustration}
+					\centering
+					\scalebox{0.85}{
+						\begin{tikzcd}[ampersand replacement=\&,arrows={-Stealth}]
+							\& \& \& \\
+							\& \hat{A} \arrow[d,shift left=0.5ex,"\lambda_{A}^{-1}"] 
+							\& \hat{B} \arrow[l,swap,"\hat{\varphi}"] 
+							\arrow[d,shift left=0.5ex,"\lambda_{B}^{-1}"] \& \\
+							\& A \arrow[r,swap,"\varphi"] 
+							\arrow[u,shift left=0.5ex,"\lambda_{A}"]  
+							\arrow[loop, 
+							mcmAlert,
+							rounded corners=4pt,
+							out=-90, in=180,
+							to path={
+								-- ++(0,-1em)
+								-- ++(6.3em,0)
+								-- ++(0,6em) node[midway, right] {$[n]_A$}
+								-- ++(-8.3em,0)
+								-- ++(0,-4.9em)
+								-- ++(1.3em,0)
+							}]
+							\& B \arrow[u,shift left=0.5ex,"\lambda_{B}"] \& \\
+							\& \& \&
+						\end{tikzcd}
+					}
+				\end{exampleblock}
+				\begin{alertblock}{Remark}
+					Compatibility means the diagram above
+					\textbf{commutes}.
+				\end{alertblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			On the previous slide, we added extra structure to our abelian varieties, namely a \textbf{principal polarization}. So the natural next question is: which isogenies are compatible with this additional structure?
+			This is exactly what the definition on this slide formalizes. An isogeny between two \textbf{principally polarized abelian varieties} is called \textbf{compatible} if it respects the given polarizations in the sense shown by the formula on the left. So we are no longer looking at arbitrary group homomorphisms, but at maps that interact correctly with the geometric structure that comes from the polarization.
+			The diagram on the right is useful because it shows what this condition means conceptually. A first naive idea might be to demand that the whole diagram commutes strictly. But that would be too restrictive, because then we would essentially only allow isomorphisms, that is, degree-one maps. Instead, the right notion is that going around the diagram corresponds to \textbf{multiplication by \(n\)}.
+			This point is important for the rest of the talk, because later results such as \textbf{Kani's Lemma} live precisely in the setting of polarized abelian varieties. So from now on, when I talk about isogenies in the relevant setting, I really mean isogenies that are \textbf{compatible with the polarization}.
+			It is also worth keeping in mind that the \textbf{Kernel--Isogeny Correspondence} still survives in this setting, but not every subgroup is allowed anymore. One has to impose additional conditions,  maximal isotropy. No detail will be given.
+		}
+	\end{frame}
+	
+	\subsection{For a computer-scientist.}
+	\note{
+		I now want to switch from the mathematical perspective to the point of view of a \textbf{computer scientist}.
+		
+		For cryptography, abstract existence statements are not enough. It is not sufficient to know that a certain isogeny exists somewhere in the theory. We need a way to \textbf{compute with it}, to \textbf{store it}, and to \textbf{evaluate it efficiently} on concrete inputs.
+		
+		So this change of perspective is really a change of question. Before, we asked what an isogeny is as a mathematical object. Now we ask how an isogeny can be made \textbf{explicit} enough that an algorithm can actually use it. This shift from abstract structure to effective representation is the key step that connects the theory with cryptographic applications.
+	}
+	
+	\begin{frame}{Representing Isogenies}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Why Representations?}
+					Existence results are not enough for cryptographic
+					purposes — we need \textbf{explicit, efficient representations}
+					to:
+					\begin{itemize}
+						\item store $\varphi$,
+						\item evaluate $\varphi$ on points $P \in A(\mathbb{F}_{q^k})$,
+%						\item verify knowledge of a secret isogeny,
+						\item carry out computations efficiently.
+					\end{itemize}
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{exampleblock}{Definition (Efficient Representation)\cite{lerouxanewisogenyrepresentation22}}
+					A representation of $\varphi: A \to B$
+					of degree $d$ over $\mathbb{F}_q$ consists of:
+					\begin{itemize}
+						\item a datum $D \in \{0,1\}^*$,
+						\item an algorithm $\mathcal{A}(D, P) \mapsto \varphi(P)$,
+					\end{itemize}
+					We say it is \emph{efficient} if:
+					\begin{itemize}
+						\item $|D| = \mathrm{poly}(\log d, \log q)$,
+						\item $\mathcal{A}$ runs in $\mathrm{poly}(\log d, k \cdot \log q)$.
+					\end{itemize} 
+				\end{exampleblock}
+			\end{column}
+		\end{columns}
+		\vspace{0.5em}
+		%================ NOTIZEN ===================
+		\note{\small
+			This brings us directly to the notion of a \textbf{representation} of an isogeny.
+			
+			In cryptography, it is not enough to know that an isogeny exists. We need an \textbf{explicit and efficient representation} that allows us to evaluate the map on points and to carry out computations in a feasible amount of time. So the point is no longer only the map itself, but the data structure and the algorithm that allow us to work with it.
+			
+			The definition on the right makes this precise. A representation consists of two parts: first, some data \(D\), and second, an algorithm that takes this data together with a point \(P\) and returns \(\varphi(P)\). It is called \textbf{efficient} if both the size of the data and the running time of the algorithm are polynomial in the relevant logarithmic parameters.
+			
+			So this slide marks an important conceptual shift. We are no longer asking for a description of an entire class of objects. Instead, we ask for a concrete way to \textbf{encode} one specific isogeny so that it becomes accessible to computation.
+			
+			That distinction may sound technical, but it is actually fundamental for the whole talk. Later on, when we discuss the limits of classical representations and then the idea of an \textbf{HD-representation}, this algorithmic viewpoint is exactly what matters.
+		}
+	\end{frame}
+	
+	\begin{frame}{Vélu's Formulas}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Theorem (Vélu) \cite{cohenHandbookEllipticHyperelliptic2005}}
+					Let $E$ be an elliptic curve and \mbox{$G \subseteq E(\bar{\mathbb{k}})$}
+					a finite subgroup. Then there exists an elliptic curve
+					\mbox{$E' = \faktor{E}{G}$} and a separable isogeny
+					\begin{align*}
+						\varphi_G : E \to \faktor{E}{G}
+					\end{align*}
+					with $\ker \varphi_G = G$, computable explicitly
+					in \textcolor{mcmPrimary}{$\mathcal{O}(|G|)$} operations.
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{alertblock}{Smoothness}
+					For $\deg \varphi = \prod l_i^{e_i}$ smooth,
+					we decompose $\varphi = \varphi_k \circ \cdots \circ \varphi_1$
+					with $\deg \varphi_i = l_i$ — each factor
+					computable efficiently.
+				\end{alertblock}
+				\begin{exampleblock}{Higher Dimensions \cite{robertApplicationsHigherDimensional}}
+					For p.p.a.v.s of dimension $g$, analogous
+					\textbf{Vélu-like formulas} exist using
+					theta models — the higher-dimensional
+					analogue of Weierstrass models.
+				\end{exampleblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\footnotesize
+			A classical and extremely important example of such a representation is given by \textbf{Vélu's formulas}.
+			For elliptic curves, Vélu's theorem gives an explicit way to pass from a finite subgroup \(G\) to the corresponding isogeny with kernel \(G\). In this sense, Vélu's formulas are the concrete algorithmic realization of the \textbf{Kernel--Isogeny Correspondence}. They tell us not only that the quotient exists, but also how to compute it explicitly.
+			The crucial point for us is the \textbf{efficiency}. The cost depends essentially on the size of the subgroup, and in the separable case this means that it depends on the \textbf{degree} of the isogeny. So Vélu's formulas work very well when the degree is small or can be broken into small pieces.
+			This is where the notion of \textbf{smoothness} becomes important. If the degree factors into small primes, then we can decompose the isogeny into a composition of small-degree isogenies and compute each factor efficiently. In complexity terms, this is favorable because we treat the problem through a sequence of small steps rather than one huge step.
+			There are also \textbf{Vélu-like formulas} in higher dimensions, for example for p.p.a.v.s using \textbf{theta models}. So the general philosophy is not limited to elliptic curves. However, higher dimension comes with a serious practical cost: the amount of data needed to store and manipulate points grows very quickly with the dimension.
+			So the main lesson from this slide is the following: Vélu's formulas explain why \textbf{smooth-degree isogenies} are computationally manageable, but they also show where the classical approach starts to break down, namely for isogenies with \textbf{large prime factors} in their degree.
+		}
+	\end{frame}
+	
+%	\begin{frame}{Kernel Representation}
+%		\begin{columns}[T]
+%			\begin{column}{0.48\textwidth}
+%				\begin{block}{Kernel--Isogeny Correspondence}
+%					There is a bijection between
+%					\begin{itemize}
+%						\item finite subgroups $G \subseteq A(\bar{\mathbb{k}})$,
+%						\item separable isogenies $\varphi: A \to B$
+%						with $\ker \varphi = G$.
+%					\end{itemize}
+%				\end{block}
+%				\vspace{0.5em}
+%				\begin{alertblock}{Key Property}
+%					In practice, we can only compute isogenies
+%					of \textbf{small degree} — so we decompose
+%					\begin{align*}
+%						\varphi = \varphi_k \circ \cdots \circ \varphi_1,
+%						\quad \deg \varphi_i = l_i.
+%					\end{align*}
+%				\end{alertblock}
+%			\end{column}
+%			\begin{column}{0.48\textwidth}
+%				\centering
+%				\vspace{1em}
+%				\begin{tikzpicture}[node distance=3cm]
+%					\node[
+%					draw=mcmPrimary,
+%					rounded corners=5pt,
+%					inner sep=10pt,
+%					minimum width=3.8cm,
+%					align=center
+%					] (G) {$G \subseteq A(\bar{\mathbb{k}})$\\[0.3em]
+%						\small finite subgroup};
+%					
+%					\node[
+%					draw=mcmPrimary,
+%					rounded corners=5pt,
+%					inner sep=10pt,
+%					minimum width=3.8cm,
+%					align=center,
+%					below of=G
+%					] (phi) {$\varphi: A \to A/G$\\[0.3em]
+%						\small separable isogeny};
+%					
+%					\draw[->, bend left=30, mcmPrimary]
+%					(G.east) to node[right] {\small Vélu} (phi.east);
+%					
+%					\draw[->, bend left=30, mcmPrimary]
+%					(phi.west) to node[left] {\small $\ker\varphi$} (G.west);
+%				\end{tikzpicture}
+%			\end{column}
+%		\end{columns}
+%		%================ NOTIZEN ===================
+%		\note{\small
+%			This slide summarizes the standard computational picture in a very compact way.
+%			
+%			The \textbf{Kernel--Isogeny Correspondence} tells us that a finite subgroup and a separable isogeny determine each other. From the algorithmic point of view, this is extremely useful, because it means that we can try to represent an isogeny by storing its \textbf{kernel data} instead of describing the whole map directly.
+%			
+%			The diagram on the right illustrates exactly this back-and-forth. Starting from a subgroup \(G\), formulas such as \textbf{Vélu's formulas} allow us to construct the corresponding isogeny. Conversely, from the isogeny we can recover its kernel. So in practice, kernel data becomes the standard handle by which we access isogenies.
+%			
+%			At the same time, the alert box already reminds us of the practical restriction: we can only compute isogenies efficiently when we can decompose them into \textbf{small-degree factors}. This means that the standard kernel-based approach is powerful, but only within the regime of \textbf{smooth degrees}.
+%			
+%			So this slide is really the bridge between the abstract theorem and the practical method: in computation, an isogeny is often treated as its \textbf{kernel plus an algorithmic reconstruction procedure}.
+%		}
+%	\end{frame}
+	
+	\begin{frame}{Kernel Representation — The Standard Approach}
+		\begin{columns}[T]
+			\begin{column}{0.55\textwidth}
+				\begin{block}{The Big Picture}
+					For a separable isogeny $\varphi: A \to B$, giving
+					\[
+					\ker\varphi = G \subseteq A(\bar{k})
+					\]
+					together with generators of $G$ yields an
+					\textbf{efficient representation} of $\varphi$ —
+					\emph{provided $\deg\varphi$ is smooth.}
+				\end{block}
+				\vspace{0.5em}
+				\begin{alertblock}{Looking ahead}
+					What if $\deg\varphi$ is \textbf{not} smooth? \\
+					$\longrightarrow$ HD-Representation.
+				\end{alertblock}
+			\end{column}
+			\begin{column}{0.41\textwidth}
+				\begin{exampleblock}{Consequence}
+					\begin{itemize}
+						\item \textbf{Space-efficient:} kernel generators
+						have size $\mathcal{O}(\log\deg\varphi)$.
+						\item \textbf{Time-efficient:} evaluation runs in
+						$\mathrm{poly}(\log\deg\varphi,\, k\log q)$.
+						\item \textbf{Limitation:} breaks down for
+						\emph{non-smooth} degrees.
+					\end{itemize}
+				\end{exampleblock}
+				\vspace{0.5em}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			We can now summarize the \textbf{standard approach} to representing isogenies.
+			
+			If we have a separable isogeny \(\varphi : A \to B\), then in many situations it is enough to give its \textbf{kernel} together with generators of that kernel. This gives a representation that is both \textbf{space-efficient} and \textbf{time-efficient}, provided that the degree of the isogeny is \textbf{smooth}.
+			
+			So from the point of view of a computer scientist, an isogeny is often not primarily seen as a geometric morphism, but rather as a composition of \textbf{small-degree kernel steps} that can be evaluated efficiently, for example via Vélu-type formulas. This is the de facto standard paradigm in isogeny-based cryptography.
+			
+			But this picture has a very clear limitation, and that limitation is exactly what drives the rest of the talk. As soon as the degree is \textbf{not smooth}, the classical kernel representation stops being efficient. In other words, the usual method works beautifully in the smooth case, but it does not give us a satisfactory representation in full generality.
+			
+			And this is precisely the question that motivates everything that comes next: \textbf{what can we do when the degree is not smooth}? The answer will be the \textbf{HD-representation}, and that is where Kani's Lemma enters the story.
+		}
+	\end{frame}
+	
+	
+	
+	\section{Kani's Lemma and Zarhin's trick.}
+	\note{
+		We now come to the \textbf{theoretical centerpiece} of the talk, namely \textbf{Kani's Lemma} together with \textbf{Zarhin's trick}.
+		
+		At first sight, this part may look much more abstract than the previous one. But in fact, it is exactly the part that changes the computational picture in a decisive way. Up to now, we have seen that the standard kernel-based approach works well for \textbf{smooth-degree isogenies}, but runs into serious limitations beyond that.
+		
+		The goal of this section is to explain how Kani's Lemma provides a new mechanism for constructing isogenies, and how Zarhin's trick allows us to place this mechanism into a usable framework. Together, these ingredients will lead to the \textbf{Embedding Lemma} and finally to the idea of an \textbf{HD-representation}.
+		
+		So even though the next few slides are more theoretical, they are really the bridge between the mathematics and the applications that come later.
+	}
+	
+	
+	\subsection{From the theoretical site.}
+	\note{
+		I first want to present this material from the \textbf{theoretical point of view}.
+		
+		The reason is that Kani's Lemma does not originally arise from cryptography. It comes from a much more classical mathematical context. So before we use it algorithmically, we should first understand the structural idea behind it.
+		
+		The pleasant surprise is that a result that looks quite abstract at first turns out to interact remarkably well with the representation problems we discussed before. This is one of the main themes of the thesis: seemingly remote mathematics can become highly relevant once one looks at isogenies from the right angle.
+	}
+	
+	\begin{frame}{Isogeny Factorisation Configuration}
+		\begin{columns}[T]
+			\begin{column}{0.52\textwidth}
+				\begin{block}{Definition \cite{kaniNumberCurvesGenus1997}}
+					Let $(A, \lambda_{A})$, $(B, \lambda_{B})$ be p.p.a.v.s and $n \geq 2$.
+					A \textbf{factorisation configuration of order $n$} is a triple
+					$(\varphi, H_1, H_2)$ with:
+					\begin{itemize}
+						\item $\varphi: A \to B$ an isogeny,
+						\item $H_1, H_2 \subseteq \ker\varphi$ subgroups,
+						\item $\operatorname{ord}(H_1) + \operatorname{ord}(H_2) = n$,
+						\item $\operatorname{ord}(H_1)\cdot \operatorname{ord}(H_2) = \deg\varphi$.
+					\end{itemize}
+					If  $H_1 \cap H_2 = \{0\}$, it is called
+					an \textbf{isogeny diamond configuration}.
+				\end{block}
+			\end{column}
+			\begin{column}{0.44\textwidth}
+				\vspace{1em}
+				\centering
+				\begin{tikzpicture}[node distance=2.2cm, auto]
+					\node (A)  {$A$};
+					\node (A1) [right of=A, xshift=0.5cm] {$A_1$};
+					\node (A2) [below of=A] {$A_2$};
+					\node (B)  [below of=A1] {$B$};
+					\draw[->] (A)  to node {$\varphi_1$} (A1);
+					\draw[->] (A)  to node[swap] {$\varphi_2$} (A2);
+					\draw[->] (A1) to node {$\psi_2$} (B);
+					\draw[->] (A2) to node[swap] {$\psi_1$} (B);
+					\draw[->] (A) to node {$\varphi$} (B);
+				\end{tikzpicture}
+				\vspace{0.5em}
+				\begin{exampleblock}{In words}
+					Two different factorizations of $\varphi$
+					via intermediate varieties $A_1$, $A_2$.
+				\end{exampleblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			We begin with the notion of an \textbf{isogeny factorisation configuration}, which is the basic setup behind Kani's Lemma.
+			
+			Conceptually, the idea is very simple: instead of looking at just one factorization of an isogeny from \(A\) to \(B\), we look at \textbf{two different factorizations} through intermediate varieties. That is exactly what the diagram on the right illustrates. So the point is not only that an isogeny exists, but that it can be decomposed in more than one meaningful way.
+			
+			Historically, this notion comes from Kani's work on curves of genus two with elliptic differentials. At first glance, that may seem rather far away from the elliptic-curve-based viewpoint that often dominates isogeny cryptography. But this is precisely what makes the result so interesting: it originates in a different mathematical context and nevertheless turns out to have strong consequences here.
+			
+			For our purposes, the important message is that such a configuration gives us structured data consisting of an isogeny together with suitable subgroups inside its kernel. In the case where these subgroups intersect trivially, we obtain the more special notion of an \textbf{isogeny diamond configuration}.
+			
+			So this slide introduces the geometric setup in which Kani's Lemma can act: \textbf{one map, two factorizations}, and therefore the possibility of extracting new structure from the relation between them.
+		}
+	\end{frame}
+	
+	\begin{frame}{Kani's Lemma}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Theorem (Kani's Lemma)}
+					Given an isogeny factorization configuration
+					of order $n$ $(\varphi, \varphi_1, \varphi'_1, \varphi_2, \varphi'_2)$,
+					where $\varphi_1$ is a $d_1$-isogeny and $\varphi_2$ is a $d_2$-isogeny.
+					Then
+					\[
+					F := \begin{pmatrix} \varphi_1 & -\tilde{\varphi}'_1 \\ \varphi_2 & \tilde{\varphi}'_2 \end{pmatrix}
+					: A \times B \to A_1 \times A_2
+					\]
+					is an $n = (d_1 + d_2)$-isogeny between the
+					p.p.a.v.'s with their product polarizations.
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{alertblock}{Key Insight}
+					If $d_1$ and $d_2$ are coprime, then:
+					{\small
+					\begin{align*}
+					\ker(F) = \{([d_1](P),\, -\varphi(P)) \mid P \in A[n]\}.
+					\end{align*}
+				}
+				\end{alertblock}
+				\begin{exampleblock}{Isogeny Diamond}
+					\centering
+					%\vspace{0.5em}
+					% Diagramm aus Abbildung 2.1 der Arbeit
+					\begin{tikzcd}[ampersand replacement=\&,arrows={-Stealth},
+						column sep=1.8em, row sep=1.8em]
+						\& A \& \\
+						A_1 \& \& A_2 \\
+						\& B \&
+						\arrow["\varphi_1", from=1-2, to=2-1,swap]
+						\arrow["\varphi_2"', from=1-2, to=2-3,swap]
+						\arrow["\varphi'_1"', from=2-1, to=3-2]
+						\arrow["\varphi'_2", from=2-3, to=3-2]
+						\arrow["\varphi", bend left=0,
+						from=1-2, to=3-2]
+					\end{tikzcd}
+					\vspace{0.5em}
+				\end{exampleblock}
+%				\begin{exampleblock}{In words}
+%					Two factorizations $\varphi = \varphi'_1 \circ \varphi_1
+%					= \varphi'_2 \circ \varphi_2$ of degrees
+%					\[
+%					\deg(\varphi_1) = d_1, \quad \deg(\varphi_2) = d_2
+%					\]
+%					give rise to an $(d_1+d_2)$-isogeny $F$
+%					\textbf{one dimension higher}.
+%				\end{exampleblock}
+			\end{column}
+		\end{columns}
+		%============= NOTIZEN =================
+		\note{\small
+			We now arrive at \textbf{Kani's Lemma} itself, which is the central theoretical result in this part of the talk, and in many ways also in the thesis as a whole.
+			
+			The statement says that if we start from an \textbf{isogeny diamond}, then we can construct a new isogeny \(F\) between product varieties. At first sight, that may not seem spectacular. But the crucial point is the degree: the new isogeny has degree \textbf{\(d_1 + d_2\)}, not degree \(d_1 d_2\).
+			
+			This is the key conceptual shift. In the classical picture, degrees usually behave \textbf{multiplicatively} under composition. Kani's Lemma introduces a setting in which we can construct new isogenies in an essentially \textbf{additive} way. And this additive behavior is exactly what later makes it possible to bypass the usual smoothness barrier.
+			
+			From the practical point of view, the next important observation is that the new isogeny \(F\) is still accessible through its \textbf{kernel}. In the case of an isogeny diamond, the kernel has the particularly simple description shown on the slide. So the construction is not only theoretically elegant, but also compatible with the kernel-based viewpoint that we developed earlier.
+			
+			So if you want to remember just one sentence from this slide, it is this: \textbf{Kani's Lemma turns degree growth from multiplicative to additive}. That is the basic reason why it has such powerful consequences.
+		}
+	\end{frame}
+	
+	
+	
+	\begin{frame}{Building an Isogeny Diamond}
+		\begin{columns}[T]
+			\begin{column}{0.616\textwidth}
+				\begin{block}{Zarhin's trick}
+					{\small
+					Given 
+					any $m > 0$, write $m = a^2 + b^2 + c^2 + d^2$
+					by Lagrange. Zarhin's Trick gives us $m$-isogenies
+					\begin{align*}
+						\alpha_A &: A^u \to A^u, \\
+						\alpha_B &: B^u \to B^u,
+					\end{align*}
+					with $u \in \{1,2,4\}$ via scalar multiplications.
+				}
+				\end{block}
+				\begin{alertblock}{Diamond condition}
+					{\small
+					Since $\alpha$ consists only of scalar
+					multiplications, we immediately have
+					\begin{align*}
+						\alpha_A \circ \varphi^u = \varphi^u \circ \alpha_B.
+					\end{align*}
+				}
+				\end{alertblock}
+			\end{column}
+			\begin{column}{0.38\textwidth}
+				\begin{exampleblock}{The resulting diamond}
+					\centering
+					\vspace{0.3em}
+					\begin{tikzcd}[ampersand replacement=\&,
+						arrows={-Stealth},
+						column sep=2.0em, row sep=2.0em]
+						\& A^u \& \\
+						A^u \& \& B^u \\
+						\& B^u \&
+						\arrow["\alpha_A", from=1-2, to=2-1, swap]
+						\arrow["\varphi^u"', from=1-2, to=2-3, swap]
+						\arrow["\varphi^u"', from=2-1, to=3-2]
+						\arrow["\alpha_B", from=2-3, to=3-2]
+					\end{tikzcd}
+					\vspace{0.3em}
+				\end{exampleblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			Of course, once we have Kani's Lemma, the next question is immediately: \textbf{how do we actually produce an isogeny diamond}?
+			
+			At first, this looks difficult, because it seems to require finding two different factorizations of a given map. But Zarhin's trick gives a very elegant way to do exactly that. The basic idea is to start with an isogeny \(\varphi\) and then construct another map that \textbf{commutes} with it.
+			
+			This works because Zarhin's trick produces isogenies built purely from \textbf{scalar multiplications}. Such maps automatically commute with isogenies, since isogenies are group homomorphisms. So instead of searching for a complicated second factorization, we manufacture one using a very controlled algebraic operation.
+			
+			The second important point is that Zarhin's trick also lets us \textbf{control the degree}. By Lagrange's four-square theorem, every positive integer can be written as a sum of at most four squares. This means that we can realize scalar-multiplication constructions of essentially arbitrary prescribed degree, up to the dimension factor \(u \in \{1,2,4\}\).
+			
+			So the role of Zarhin's trick is the following: it gives us a systematic way to build the \textbf{diamonds} that Kani's Lemma needs. In that sense, Zarhin's trick is not the final result, but the machine that makes Kani's Lemma usable.
+		}
+	\end{frame}
+	
+	\begin{frame}{Embedding Lemma}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\vspace{1cm}
+				\begin{block}{Lemma 3.4 (Embedding Lemma)}
+					{\small
+						For any $m > 0$, an $n$-isogeny \mbox{$\varphi: A \to B$}
+						of p.p.a.v.'s of dimension $g$ can be embedded into
+						an $(n+m)$-isogeny $F$ of dimension $2 \cdot u \cdot g$,
+						with $u \in \{1,2,4\}$. Concretely:
+						\begin{align*}
+							F := \begin{pmatrix} \alpha_A & -\tilde{\varphi} \\
+								\varphi & \tilde{\alpha}_B \end{pmatrix}
+							: A^u \times B^u \to A^u \times B^u.
+						\end{align*}
+					}
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{alertblock}{Key consequence}
+					{\small
+						We can recover $\varphi$ from $F$ via
+						\begin{align*}
+							A \xrightarrow{\;\iota\;} A^u \times B^u
+							\xrightarrow{\;F\;} A^u \times B^u
+							\xrightarrow{\;\pi\;} B.
+						\end{align*}
+						\textbf{Every} isogeny can be embedded into a
+						higher-dimensional isogeny of \textbf{smooth degree}.
+					}
+				\end{alertblock}
+				\begin{exampleblock}{Construction}
+					\centering
+					\begin{tikzpicture}[node distance=1cm]
+						\node (Au1) {$A^u$};
+						\node (Au2) [right of=Au1, xshift=0.8cm] {$A^u$};
+						\node (Bu1) [below of=Au1] {$B^u$};
+						\node (Bu2) [below of=Au2] {$B^u$};
+						\draw[->] (Au1) to node[above] {$\alpha_A$} (Au2);
+						\draw[->] (Au1) to node[left]  {$\varphi^u$} (Bu1);
+						\draw[->] (Au2) to node[right] {$\varphi^u$} (Bu2);
+						\draw[->] (Bu1) to node[below] {$\alpha_B$} (Bu2);
+					\end{tikzpicture}
+					\vspace{0.3em}
+				\end{exampleblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			We can now combine the previous ingredients, and this leads to the \textbf{Embedding Lemma}.
+			
+			This is probably the most important consequence of Kani's Lemma for the rest of the talk. Starting from an \(n\)-isogeny \(\varphi : A \to B\), the lemma tells us that we can embed it into a \textbf{higher-dimensional isogeny} \(F\) whose degree can be chosen to be \textbf{smooth}. In other words, instead of trying to represent \(\varphi\) directly, we move to a larger ambient space where a better-behaved isogeny exists.
+			
+			This is already a major conceptual breakthrough. The difficulty of the original isogeny is not removed, but it is transferred into a different form. We trade \textbf{dimension} for \textbf{degree control}. That is exactly the new degree of freedom that the earlier theory did not have.
+			
+			Just as importantly, the original isogeny is not lost in this process. The factorization on the right shows that we can \textbf{recover \(\varphi\)} from the larger isogeny \(F\). So \(F\) is not merely some auxiliary object; it genuinely contains the information we care about.
+			
+			So the key message of this slide is: every isogeny can be \textbf{embedded} into a higher-dimensional isogeny of \textbf{smooth degree}, and this higher-dimensional object still allows us to reconstruct the original map.
+		}
+	\end{frame}
+	
+	\begin{frame}{HD-Representation}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Definition (HD-Representation)}
+					Any representation of $F_\varphi$ from
+					the Embedding Lemma is called an
+					\textbf{HD-representation} of $\varphi$.
+				\end{block}
+				\begin{block}{Theorem \cite{robertBreakingSIDHPolynomial2023a}}
+					Let $\varphi: A \to B$ be an $n$-isogeny and
+					$N = \prod l_i^{e_i} > n$ coprime to $n$.
+					Given evaluations of $\varphi$ on $A[N]$,
+					we can represent $\varphi$ as a smooth-degree
+					$(2ug)$-dimensional $N$-isogeny $F_\varphi$.
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{exampleblock}{Strategy}
+					\begin{itemize}
+						\item Choose $N$ smooth, $\gcd(N,n) = 1$
+						\item Embed $\varphi$ into $F_\varphi$
+						via Embedding Lemma
+						\item Recover $\varphi$ via
+						$\varphi = \pi \circ F_\varphi \circ \iota$
+					\end{itemize}
+				\end{exampleblock}
+				\begin{alertblock}{Key takeaway}
+					\textbf{Every} isogeny — regardless of its
+					degree — admits an efficient representation.
+				\end{alertblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			The \textbf{HD-representation} is now the practical formulation of the Embedding Lemma.
+			
+			Let us put the ingredients together. We start with the isogeny \(\varphi\) that we actually want to represent. Then we choose a smooth integer \(N\), coprime to the original degree, and use the Embedding Lemma to construct a higher-dimensional isogeny \(F_\varphi\) of degree \(N\) into which \(\varphi\) is embedded.
+			
+			The crucial point is that \(F_\varphi\) has \textbf{smooth degree}, so it can again be handled by the standard kernel-based methods. In that sense, the HD-representation does not replace the classical approach; rather, it \textbf{extends} it. We still represent a smooth-degree isogeny by kernel data, but now that smooth-degree isogeny lives in a higher-dimensional space and encodes the original map.
+			
+			This leads to the fundamental conclusion on the slide: \textbf{every isogeny}, regardless of its degree, admits an efficient representation. The price we pay is higher dimension, but the reward is that we are no longer restricted to smooth degrees.
+			
+			There is one more point that will become crucial later for the destructive application. In order to build \(F_\varphi\), we need the values of \(\varphi\) on certain torsion points, namely on \(A[N]\). So the HD-representation depends not only on the abstract existence of \(\varphi\), but on access to specific \textbf{torsion evaluations}. Please keep that in mind, because it will be exactly the entry point for the attack on SIDH.
+		}
+	\end{frame}
+	
+	
+	
+	\section{A little History.}
+	
+		\begin{frame}{Timeline}
+		\centering
+		
+		\vspace{2em}
+		
+		
+			\vspace{1em}
+			
+			\begin{tikzpicture}[x=2.2cm, y=1cm,>={To}, every path/.style={}]
+				% Scale: 5 units = 51 years (1919-1970), so 1 year = 5/51 units
+				% 1919=0, 1925=0.588, 1933=1.373, 1945=2.549, 1955=3.529, 1965=4.510, 1970=5
+				%Sclae :  29 years Units 5 units 1 year = 5/29
+				% Axis
+				\draw[mcmPrimary, line width=1pt] (0,0) -- (5.2,0);
+				
+				
+				% Ticks and labels
+				\foreach \x/\lbl in {0/1996, {9* 5/29}/2006,{14* 5/29}/2011,{19* 5/29}/2017,{27* 5/29}/2025}{
+					\draw[mcmPrimary, line width=0.8pt] (\x, 0.12) -- (\x, -0.12);
+					\node[below, font=\small, text=mcmPrimary] (\lbl) at (\x, -0.15) {\lbl};
+				}
+				
+				% Balken B
+				\node[anchor=west,
+				fill=mcmPrimaryAccent,
+				inner xsep=6pt, inner ysep=4pt,
+				minimum height=0.4cm,
+				font=\footnotesize\bfseries,
+				text=mcmPrimary,rounded corners = 7.5pt]
+				(N1)
+				at ([yshift=0.9cm,xshift=0.4cm]1996) {Kani's Lemma};
+				%\draw[mcmPrimaryMuted,dashed] (1997.north) -- (N1.west);
+				\draw[mcmPrimary, line width=0.8pt] (0.2, 0.12) -- (0.2, -0.12);
+				
+				\node[anchor=west,
+				fill=mcmPrimary!70,
+				inner xsep=6pt, inner ysep=4pt,
+				minimum height=0.4cm,
+				font=\footnotesize\bfseries,
+				text=mcmBg,rounded corners = 7.5pt]
+				(N2)
+				at ([yshift = 2 cm]{26*5/29},0) {Castryck and Decru};
+				
+				\draw[mcmPrimary, line width=0.8pt] ({26*5/29}, 0.12) -- ({26*5/29}, -0.12);
+				
+				
+				\node[anchor=west,
+				fill=mcmPrimary!70,
+				inner xsep=6pt, inner ysep=4pt,
+				minimum height=0.4cm,
+				font=\footnotesize\bfseries,
+				text=mcmBg,rounded corners = 7.5pt]
+				(N2)
+				at ([yshift=2.4cm]2006) {Rostovtsev and
+					Stolbunov};
+				
+				\node[anchor=west,
+				fill=mcmPrimaryMuted,
+				inner xsep=6pt, inner ysep=4pt,
+				minimum height=0.4cm,
+				font=\footnotesize\bfseries,
+				text=mcmPrimary,rounded corners = 7.5pt]
+				(N3)
+				at ([yshift=1.6cm]2011) {SIDH};
+				
+				\node[anchor=west,
+				fill=mcmPrimary!70,
+				inner xsep=6pt, inner ysep=4pt,
+				minimum height=0.4cm,
+				font=\footnotesize\bfseries,
+				text=mcmBg,rounded corners = 7.5pt]
+				(N4)
+				at ([yshift=0.9cm]2017) {Torsion Attacks};
+				
+				\node[anchor=west,
+				fill=mcmPrimaryAccent,
+				inner xsep=6pt, inner ysep=4pt,
+				minimum height=0.4cm,
+				font=\footnotesize\bfseries,
+				text=mcmPrimary,rounded corners = 7.5pt]
+				(N5)
+				at ([yshift=1.6cm]2025) {SQI-sign HD};
+				
+				\node[anchor=west,
+				fill=mcmPrimaryMuted,
+				inner xsep=6pt, inner ysep=4pt,
+				minimum height=0.4cm,
+				font=\footnotesize\bfseries,
+				text=mcmPrimary,rounded corners = 7.5pt]
+				(N3)
+				at ([yshift=1.6cm]1996) {Hard homogeneous spaces};
+				
+%				%BARS
+%				\fill[mcmPrimaryAccent] (0, 0.35) rectangle (1.373, 0.75);
+%				\node[right, font=\footnotesize\bfseries, text=mcmPrimary] at (0.05, 0.55)
+%				{B};
+%				
+%				\fill[mcmPrimary!70] (2.549, 0.35) rectangle (5, 0.75);
+%				\node[right, font=\footnotesize\bfseries, text=mcmBg] at (2.60, 0.55)
+%				{C};
+%				
+%				\fill[mcmPrimaryMuted] (0.588, 1.0) rectangle (4.510, 1.4);
+%				\node[right, font=\footnotesize\bfseries, text=mcmPrimary] at (0.64, 1.2)
+%				{A};
+			\end{tikzpicture}
+		
+		%================ NOTIZEN ===================
+		\note{\scriptsize
+			Before I come to the final section, where we see the HD-representation in action, I want to place \textbf{Kani's Lemma} into the broader \textbf{history of isogeny-based cryptography}.
+			
+			The story begins with Couveignes' idea of \textbf{hard homogeneous spaces} in the mid-1990s, which provided one of the foundational conceptual frameworks for isogeny-based cryptography. Later, these ideas were rediscovered and developed further by \textbf{Rostovtsev and Stolbunov}, who proposed an isogeny-based key exchange in the spirit of Diffie--Hellman. 
+			
+			This line of work eventually led to \textbf{SIDH} and later \textbf{SIKE}, which for some time became the flagship of isogeny-based post-quantum cryptography. The basic idea was to construct a common elliptic curve using secret isogenies and then use its \(j\)-invariant as the shared secret.
+			
+			However, SIDH required the parties to publish auxiliary \textbf{torsion information}. This extra structure was always somewhat delicate, and over time it became the entry point for increasingly powerful \textbf{torsion attacks}. The decisive break came in \textbf{2022}, when \textbf{Castryck and Decru} showed an efficient key recovery attack on SIDH based on Kani's glue-and-split idea. Their attack broke SIKE parameters in practical time and showed that SIDH and SIKE are insecure.
+			
+			After that, the story did not simply end. Instead, the same underlying mathematical breakthrough was developed further into the more systematic notion of an \textbf{HD-representation}, and this in turn inspired constructive schemes such as \textbf{SQISignHD}. So the same idea that helped destroy one prominent protocol also opened the door to a new generation of constructions. 
+			
+			This is why I find the history particularly striking: it shows how a deep mathematical insight can first appear as an \textbf{attack} and then immediately reappear as a \textbf{construction tool}.
+		}
+	\end{frame}
+	
+	\section{A new dimension.}
+	
+	\subsection{Destructive Applications.}
+	
+	\begin{frame}{SIDH}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Setup}
+					Prime $p = f \cdot l_A^{e_A} \cdot l_B^{e_B} \pm 1$,
+					supersingular curve $E_0/\mathbb{F}_{p^2}$ with
+					public torsion bases
+					\begin{align*}
+						\langle P_A, Q_A \rangle &= E_0[l_A^{e_A}], \\
+						\langle P_B, Q_B \rangle &= E_0[l_B^{e_B}].
+					\end{align*}
+				\end{block}
+				\begin{block}{Key Exchange}
+					Alice computes secret $\varphi_A: E_0 \to E_A$,
+					and also publishes $\varphi_A(P_B),\varphi_A(Q_B)$. Bob does the same.\\
+					Shared secret: $j(E_{AB}) = j(E_{BA})$.
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{exampleblock}{The SIDH diagram}
+					\centering
+					\vspace{0.3em}
+					\begin{tikzcd}[ampersand replacement=\&,
+						arrows={-Stealth},
+						column sep=2.0em, row sep=2.0em]
+						E_0 \arrow[r, "\varphi_A"]
+						\arrow[d, "\varphi_B"'] \&
+						E_A \arrow[d, "\varphi_B'"] \\
+						E_B \arrow[r, "\varphi_A'"'] \&
+						E_{AB}
+					\end{tikzcd}
+					\vspace{0.3em}
+				\end{exampleblock}
+				\begin{alertblock}{Fatal extra information}
+					Public keys reveal the action of $\varphi_A$
+					on $E_0[l_B^{e_B}]$ and vice versa —
+					exactly the torsion information needed
+					for the HD-representation.
+				\end{alertblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			We now turn to the first concrete application of the HD-representation, namely the attack on \textbf{SIDH}.
+			
+			At a high level, the goal of SIDH is to let two parties construct a common elliptic curve and then use its \(j\)-invariant as a shared secret. Both parties start from a public supersingular elliptic curve \(E_0\), compute their own secret isogenies, and then exchange enough information so that each side can complete the square and arrive at the same final curve. 
+			
+			The important point is that SIDH does not only reveal the image curves. It also reveals the action of the secret isogenies on certain \textbf{torsion bases}. And this is exactly the kind of information that looked harmless at first, but turns out to be fatal from the perspective of the \textbf{HD-representation}. 
+			
+			So the message of this slide is simple: SIDH publishes precisely the kind of \textbf{torsion evaluations} that the HD machinery needs. At a high level, that is the reason why the attack becomes possible.
+		}
+	\end{frame}
+	
+	\begin{frame}{Attack on SIDH}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Setup}
+					W.l.o.g.\ assume $l_A^{e_A} > l_B^{e_B}$.
+					Set $n := l_A^{e_A} - l_B^{e_B}$, then
+					$l_A^{e_A}, l_B^{e_B}, n$ are pairwise coprime.
+					Construct isogeny with Zarhin's trick:
+					\begin{align*}
+						\alpha_0 &: E_0^u \to E_0^u,\\
+						\alpha_B &: E_B^u \to E_B^u.
+					\end{align*}
+				\end{block}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{exampleblock}{Isogeny Diamond}
+					\centering
+					\begin{tikzcd}[ampersand replacement=\&,
+						arrows={-Stealth},
+						column sep=1em, row sep=1em]
+						\& E_0^u \& \\
+						E_0^u \& \& E_B^u \\
+						\& E_B^u \&
+						\arrow["\alpha_0", from=1-2, to=2-1, swap]
+						\arrow["\varphi_B^u"', from=1-2, to=2-3, swap]
+						\arrow["\varphi_B^u"', from=2-1, to=3-2]
+						\arrow["\alpha_B", from=2-3, to=3-2]
+					\end{tikzcd}
+				\end{exampleblock}
+				\begin{alertblock}{Key Recovery}
+					Bob's reveals $\varphi_B$ on
+					$E_0[l_A^{e_A}]$ \\[0.3em]
+					$\Rightarrow$ Bob's secret isogeny is recovered
+					in \textbf{polynomial time}.
+				\end{alertblock}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			This slide sketches how the attack works in principle.
+			
+			Suppose, without loss of generality, that one secret degree is larger than the other. Then we can look at the \textbf{difference} of the two degrees and use \textbf{Zarhin's trick} to construct an auxiliary isogeny of exactly that degree. This gives us the missing ingredient needed to build an \textbf{isogeny diamond}.
+			
+			Once we have that diamond, we can apply \textbf{Kani's Lemma} and obtain a higher-dimensional isogeny \(F\) whose degree is the larger secret degree. At this point, the crucial observation is that the public key of SIDH already contains the values of the secret isogeny on the relevant torsion subgroup. In other words, the public data supplies exactly the evaluations needed to build the corresponding \textbf{HD-representation}. 
+			
+			From there, one can recover the secret isogeny in \textbf{polynomial time}, under the heuristics used in the attack. This is why the Castryck--Decru attack was so devastating: it was not just a structural weakness, but a practical key recovery attack that broke the concrete SIKE parameter sets submitted to NIST
+			
+			So the conceptual lesson is very clear: the extra torsion information that made SIDH functional also made it vulnerable. The protocol essentially published the exact data that the new higher-dimensional machinery needed.
+		}
+	\end{frame}
+	
+	
+	\subsection{Constructive  Applications.}
+		\begin{frame}{Constructive Applications}
+		\begin{columns}[T]
+			\begin{column}{0.48\textwidth}
+				\begin{block}{A new dimension}
+					The HD-representation enables isogenies
+					of \textbf{arbitrary degree} — not just smooth.
+					This unlocks a new approach to
+					isogeny-based signature schemes.
+				\end{block}
+				\begin{exampleblock}{Key insight}
+					Higher-dimensional isogenies shift
+					computational cost and relax constraints
+					on the underlying prime $p$ —
+					making higher security levels feasible.
+				\end{exampleblock}
+			\end{column}
+			\begin{column}{0.48\textwidth}
+				\begin{block}{Higher dimensional schemes}
+					\begin{itemize}
+						\item \textbf{SQIsignHD \cite{dartoisSQIsignHDNewDimensions2024} }\\ dimension 4/8,
+						non-smooth response isogeny
+						\item \textbf{SQIPrime \cite{duparcSQIPrimeDimension22025}} \\ dimension 2,
+						non-smooth \emph{challenge} isogeny,
+						no smooth degrees anywhere
+						\item \textbf{PRISM \cite{bassoPRISMSimpleCompact}} \\ large prime degree
+						isogenies
+					\end{itemize}
+				\end{block}
+			\end{column}
+		\end{columns}
+		%================ NOTIZEN ===================
+		\note{\small
+			The story of the HD-representation does not end with the attack. It also leads to \textbf{constructive applications}.
+			
+			The key new paradigm is that we are no longer restricted to \textbf{smooth-degree isogenies}. By moving to higher dimension, we can efficiently work with isogenies of much more general degree. This opens the door to new signature schemes that would be difficult or impossible to realize within the older smooth-degree-only framework. 
+			
+			One important example is \textbf{SQISignHD}. The idea there is to use the higher-dimensional framework not as a weapon against a protocol, but as a design principle for a new one. According to the SQISignHD paper, this makes it easier to scale to higher security levels and can even lead to very compact signatures, although verification now requires higher-dimensional isogeny computations.
+			
+			So this final slide illustrates what I think is the most beautiful aspect of the whole story: the same mathematics that broke \textbf{SIDH} also created a \textbf{new design space} for isogeny-based cryptography. In that sense, Kani's Lemma did not just reveal a weakness; it introduced a genuinely \textbf{new dimension} into the subject.
+		}
+	\end{frame}
+	% =====================================================================
+% Es gibt als blöcke auch alertblock und exampleblock (mit jeweiligen farben)
+%	\begin{frame}{Test Frame}
+%		\begin{columns}[T]
+%			\begin{column}{0.48\textwidth}
+%				\begin{block}{Mathe Umgebung}
+%					\begin{align*}
+%						\sum_{i=1}^{12} a \cdot B ^3 \\
+%						1 +2 +3 + \varphi + \sigma 
+%					\end{align*}
+%				\end{block}
+%			\end{column}
+%			\begin{column}{0.48\textwidth}
+%				\begin{block}{Test}
+%					content...
+%				\end{block}
+%			\end{column}
+%		\end{columns}
+%	\end{frame}
+%	
+	
+
+	
+% =====================================================================
+	\section{References}
+	% =====================================================================
+	
+
+	
+	\begin{frame}[allowframebreaks]{References}
+		\printbibliography[heading=none]
+	\end{frame}
+	
+	
+	% =====================================================================
+	% BACKUP SLIDES
+	% =====================================================================
+	
+	\appendix
+	
+
+	
+	\mcmEndFrame
+\end{document}
